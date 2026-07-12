@@ -14,6 +14,7 @@ enum class SafetyState
   SelfTesting,
   Standby,
   ManualTest,
+  Balancing,
   Fault,
 };
 
@@ -22,6 +23,7 @@ enum class FaultCode
   None,
   SelfTestFailed,
   ImuUnhealthy,
+  PitchLimitExceeded,
 };
 
 class SafetyManager
@@ -32,11 +34,14 @@ public:
   void begin();
   void completeSelfTest(const SelfTestReport &report);
   bool requestManualMotorTest(float leftPower, float rightPower, uint32_t nowMs);
+  bool requestBalance(float pitchDegrees, bool attitudeValid, bool imuHealthy);
+  void monitorBalance(float pitchDegrees, bool attitudeValid, bool imuHealthy);
   void disarm();
   void reportFault(FaultCode faultCode);
   void update(uint32_t nowMs);
   SafetyState state() const;
   FaultCode faultCode() const;
+  bool isBalancing() const;
   static const char *stateName(SafetyState state);
   static const char *faultName(FaultCode faultCode);
 
@@ -46,5 +51,6 @@ private:
   SafetyState _state = SafetyState::Boot;
   FaultCode _faultCode = FaultCode::None;
   uint32_t _manualTestExpiresAtMs = 0;
+  bool _selfTestPassed = false;
 };
 } // namespace balance_car::app

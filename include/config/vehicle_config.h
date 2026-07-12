@@ -34,6 +34,55 @@ struct SafetyConfiguration
 {
   uint16_t manualTestDurationMs;
   float manualTestPower;
+  uint16_t offlineArmHoldMs;
+  float balanceStartAngleLimitDegrees;
+  float balanceFaultAngleDegrees;
+};
+
+struct AttitudeConfiguration
+{
+  enum class PitchAxis
+  {
+    X,
+    Y,
+  };
+
+  PitchAxis pitchAxis;
+  float complementaryFilterTimeConstantSeconds;
+  float accelerometerAngleOffsetDegrees;
+  bool pitchAngleInverted;
+  bool pitchGyroInverted;
+};
+
+struct BalanceConfiguration
+{
+  uint16_t controlPeriodMs;
+  float targetPitchDegrees;
+  float proportionalGain;
+  float integralGain;
+  float derivativeGain;
+  float integralLimit;
+  float maximumMotorCommand;
+  bool motorOutputInverted;
+};
+
+struct VelocityConfiguration
+{
+  uint16_t controlPeriodMs;
+  float proportionalGain;
+  float integralGain;
+  float integralLimit;
+  float maximumPitchOffsetDegrees;
+  float measurementFilterAlpha;
+  bool outputInverted;
+};
+
+struct MotionConfiguration
+{
+  float maximumTargetSpeedMps;
+  float targetSpeedStepMps;
+  float maximumTurnCommand;
+  float turnCommandStep;
 };
 
 constexpr MotorConfiguration kMotorConfiguration = {
@@ -62,5 +111,44 @@ constexpr ImuConfiguration kImuConfiguration = {
 constexpr SafetyConfiguration kSafetyConfiguration = {
     .manualTestDurationMs = 1000,
     .manualTestPower = 0.15F,
+    .offlineArmHoldMs = 1500,
+    .balanceStartAngleLimitDegrees = 30.0F,
+    .balanceFaultAngleDegrees = 60.0F,
+};
+
+constexpr AttitudeConfiguration kAttitudeConfiguration = {
+    .pitchAxis = AttitudeConfiguration::PitchAxis::Y,
+    .complementaryFilterTimeConstantSeconds = 0.25F,
+    .accelerometerAngleOffsetDegrees = 1.5F,
+    .pitchAngleInverted = false,
+    .pitchGyroInverted = false,
+};
+
+constexpr BalanceConfiguration kBalanceConfiguration = {
+    .controlPeriodMs = 5,
+    .targetPitchDegrees = -0.8F,
+    .proportionalGain = 18.0F / 255.0F,
+    .integralGain = 0.15F / 255.0F,
+    .derivativeGain = 0.9F / 255.0F,
+    .integralLimit = 5000.0F,
+    .maximumMotorCommand = 0.35F,
+    .motorOutputInverted = false,
+};
+
+constexpr VelocityConfiguration kVelocityConfiguration = {
+    .controlPeriodMs = 40,
+    .proportionalGain = 0.02F,
+    .integralGain = 0.0001F,
+    .integralLimit = 2.0F,
+    .maximumPitchOffsetDegrees = 6.0F,
+    .measurementFilterAlpha = 0.3F,
+    .outputInverted = false,
+};
+
+constexpr MotionConfiguration kMotionConfiguration = {
+    .maximumTargetSpeedMps = 0.25F,
+    .targetSpeedStepMps = 0.05F,
+    .maximumTurnCommand = 0.20F,
+    .turnCommandStep = 0.03F,
 };
 } // namespace balance_car::config

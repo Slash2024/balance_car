@@ -1,5 +1,7 @@
 #include "app/safety_manager.h"
 
+#include <math.h>
+
 namespace balance_car::app
 {
 SafetyManager::SafetyManager(drivers::MotorDriver &motorDriver, const config::SafetyConfiguration &configuration)
@@ -12,10 +14,12 @@ void SafetyManager::begin()
   _motorDriver.setEnabled(false);
   _state = SafetyState::SelfTesting;
   _faultCode = FaultCode::None;
+  _selfTestPassed = false;
 }
 
 void SafetyManager::completeSelfTest(const SelfTestReport &report)
 {
+  _selfTestPassed = report.passed;
   if (!report.passed)
   {
     reportFault(FaultCode::SelfTestFailed);
@@ -25,6 +29,39 @@ void SafetyManager::completeSelfTest(const SelfTestReport &report)
   _motorDriver.setEnabled(false);
   _state = SafetyState::Standby;
   _faultCode = FaultCode::None;
+}
+
+bool SafetyManager::requestBalance(float pitchDegrees, bool attitudeValid, bool imuHealthy)
+{
+  if (!_selfTestPassed || _state != SafetyState::Standby || !attitudeValid || !imuHealthy ||
+      fabsf(pitchDegrees) > _configuration.balanceStartAngleLimitDegrees)
+  {
+    return false;
+  }
+
+  _motorDriver.setEnabled(true);
+  _motorDriver.stop();
+  _state = SafetyState::Balancing;
+  return true;
+}
+
+void SafetyManager::monitorBalance(float pitchDegrees, bool attitudeValid, bool imuHealthy)
+{
+  if (_state != SafetyState::Balancing)
+  {
+    return;
+  }
+
+  if (!attitudeValid || !imuHealthy)
+  {
+    reportFault(FaultCode::ImuUnhealthy);
+    return;
+  }
+
+  if (fabsf(pitchDegrees) >= _configuration.balanceFaultAngleDegrees)
+  {
+    reportFault(FaultCode::PitchLimitExceeded);
+  }
 }
 
 bool SafetyManager::requestManualMotorTest(float leftPower, float rightPower, uint32_t nowMs)
@@ -47,7 +84,7 @@ void SafetyManager::disarm()
   _manualTestExpiresAtMs = 0;
   if (_state != SafetyState::Fault)
   {
-    _state = SafetyState::Standby;
+    _state = _selfTestPassed ? SafetyState::Standby : SafetyState::SelfTesting;
   }
 }
 
@@ -77,6 +114,11 @@ FaultCode SafetyManager::faultCode() const
   return _faultCode;
 }
 
+bool SafetyManager::isBalancing() const
+{
+  return _state == SafetyState::Balancing;
+}
+
 const char *SafetyManager::stateName(SafetyState state)
 {
   switch (state)
@@ -89,6 +131,8 @@ const char *SafetyManager::stateName(SafetyState state)
     return "STANDBY";
   case SafetyState::ManualTest:
     return "MANUAL_TEST";
+  case SafetyState::Balancing:
+    return "BALANCING";
   case SafetyState::Fault:
     return "FAULT";
   }
@@ -105,6 +149,8 @@ const char *SafetyManager::faultName(FaultCode faultCode)
     return "SELF_TEST_FAILED";
   case FaultCode::ImuUnhealthy:
     return "IMU_UNHEALTHY";
+  case FaultCode::PitchLimitExceeded:
+    return "PITCH_LIMIT_EXCEEDED";
   }
   return "UNKNOWN";
 }

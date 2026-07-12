@@ -57,7 +57,9 @@ constexpr ImuPins kImuPins = {
     .scl = 10,
 };
 
-// 独立于 IMU 的 I2C0（GPIO8/10）。连接相机模块：GPIO1->相机GPIO47，GPIO2->相机GPIO48。
+constexpr uint8_t kBalanceArmButtonPin = 0;
+
+// Dedicated camera I2C bus: GPIO1 -> camera GPIO47, GPIO2 -> camera GPIO48.
 constexpr VisionI2cPins kVisionI2cPins = {
     .sda = 1,
     .scl = 2,
