@@ -29,6 +29,12 @@ struct ImuPins
   uint8_t scl;
 };
 
+struct VisionI2cPins
+{
+  uint8_t sda;
+  uint8_t scl;
+};
+
 constexpr MotorPins kMotorPins = {
     .standby = 4,
     .leftPwm = 5,
@@ -49,5 +55,11 @@ constexpr EncoderPins kEncoderPins = {
 constexpr ImuPins kImuPins = {
     .sda = 8,
     .scl = 10,
+};
+
+// 独立于 IMU 的 I2C0（GPIO8/10）。连接相机模块：GPIO1->相机GPIO47，GPIO2->相机GPIO48。
+constexpr VisionI2cPins kVisionI2cPins = {
+    .sda = 1,
+    .scl = 2,
 };
 } // namespace balance_car::config
