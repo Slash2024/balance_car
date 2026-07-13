@@ -128,7 +128,9 @@ constexpr BalanceConfiguration kBalanceConfiguration = {
     .controlPeriodMs = 5,
     .targetPitchDegrees = -0.8F,
     .proportionalGain = 18.0F / 255.0F,
-    .integralGain = 0.15F / 255.0F,
+    // Start tuning with P-D control only. Enable a small Ki only after the
+    // mechanical trim has been verified on the actual vehicle.
+    .integralGain = 0.0F,
     .derivativeGain = 0.9F / 255.0F,
     .integralLimit = 5000.0F,
     .maximumMotorCommand = 0.35F,
